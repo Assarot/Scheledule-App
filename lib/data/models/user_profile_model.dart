@@ -1,37 +1,35 @@
 class UserProfileModel {
   final int id;
-  final String firstName;
+  final String names;
   final String lastName;
   final String email;
-  final String? phone;
+  final String? phoneNumber;
   final String? address;
-  final DateTime? birthDate;
+  final DateTime? dob;
   final String? profilePicture;
   final bool isActive;
 
   UserProfileModel({
     required this.id,
-    required this.firstName,
+    required this.names,
     required this.lastName,
     required this.email,
-    this.phone,
+    this.phoneNumber,
     this.address,
-    this.birthDate,
+    this.dob,
     this.profilePicture,
     required this.isActive,
   });
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
     return UserProfileModel(
-      id: json['id'] as int,
-      firstName: json['firstName'] as String,
+      id: json['idUserProfile'] as int,
+      names: json['names'] as String,
       lastName: json['lastName'] as String,
       email: json['email'] as String,
-      phone: json['phone'] as String?,
+      phoneNumber: json['phoneNumber'] as String?,
       address: json['address'] as String?,
-      birthDate: json['birthDate'] != null
-          ? DateTime.parse(json['birthDate'] as String)
-          : null,
+      dob: json['dob'] != null ? DateTime.parse(json['dob'] as String) : null,
       profilePicture: json['profilePicture'] as String?,
       isActive: json['isActive'] as bool? ?? true,
     );
@@ -39,18 +37,18 @@ class UserProfileModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'firstName': firstName,
+      'idUserProfile': id,
+      'names': names,
       'lastName': lastName,
       'email': email,
-      'phone': phone,
+      'phoneNumber': phoneNumber,
       'address': address,
-      'birthDate': birthDate?.toIso8601String(),
+      'dob': dob?.toIso8601String().split('T')[0],
       'profilePicture': profilePicture,
       'isActive': isActive,
     };
   }
 
-  String get fullName => '$firstName $lastName';
-  String get initials => '${firstName[0]}${lastName[0]}'.toUpperCase();
+  String get fullName => '$names $lastName';
+  String get initials => '${names[0]}${lastName[0]}'.toUpperCase();
 }

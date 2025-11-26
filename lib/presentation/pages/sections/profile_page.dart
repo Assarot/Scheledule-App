@@ -10,6 +10,7 @@ import '../../../data/datasources/user_profile_remote_datasource.dart';
 import '../../../data/datasources/auth_user_remote_datasource.dart';
 import '../../../data/datasources/auth_local_datasource.dart';
 import '../login_page.dart';
+import 'create_profile_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -50,14 +51,28 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
 
-      // Paso 1: Obtener datos del usuario autenticado con /me
+      // Paso 1: Obtener auth_user para conseguir el idUserProfile
       final authUserDataSource = AuthUserRemoteDataSource();
-      final authUser = await authUserDataSource.getCurrentUser(accessToken);
+      final authUser = await authUserDataSource.getAuthUserById(
+        int.parse(user.id),
+        accessToken,
+      );
 
-      // Paso 2: Usar el idUserProfile para obtener el perfil completo
+      print('✅ Got idUserProfile: ${authUser.idUserProfile}');
+
+      // Si no tiene perfil, setState con isLoading = false para mostrar el formulario
+      if (authUser.idUserProfile == null) {
+        setState(() {
+          isLoading = false;
+          userProfile = null;
+        });
+        return;
+      }
+
+      // Paso 2: Obtener el perfil completo usando el idUserProfile
       final profileDataSource = UserProfileRemoteDataSource();
       final profile = await profileDataSource.getUserProfileById(
-        authUser.idUserProfile,
+        authUser.idUserProfile!,
         accessToken,
       );
 
@@ -148,6 +163,13 @@ class _ProfilePageState extends State<ProfilePage> {
           ? const Center(child: CircularProgressIndicator())
           : user == null
           ? const Center(child: Text('No hay usuario autenticado'))
+          : userProfile == null
+          ? CreateProfilePage(
+              authUserId: int.parse(user.id),
+              onProfileCreated: () {
+                _loadUserProfile();
+              },
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -208,13 +230,14 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 8),
-                  // Email
-                  Text(
-                    user.email,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
-                  ),
+                  // Email del perfil
+                  if (userProfile?.email != null)
+                    Text(
+                      userProfile!.email,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
+                    ),
                   const SizedBox(height: 8),
                   // Username
                   Text(
@@ -270,23 +293,27 @@ class _ProfilePageState extends State<ProfilePage> {
                   Card(
                     child: Column(
                       children: [
-                        ListTile(
-                          leading: const Icon(Icons.email_outlined),
-                          title: const Text('Correo Electrónico'),
-                          subtitle: Text(user.email),
-                        ),
-                        const Divider(height: 1),
+                        if (userProfile?.email != null)
+                          ListTile(
+                            leading: const Icon(Icons.email_outlined),
+                            title: const Text('Correo Electrónico'),
+                            subtitle: Text(userProfile!.email),
+                          ),
+                        if (userProfile?.email != null)
+                          const Divider(height: 1),
                         ListTile(
                           leading: const Icon(Icons.person_outline),
                           title: const Text('Nombre de Usuario'),
                           subtitle: Text(user.username),
                         ),
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.verified_user_outlined),
-                          title: const Text('ID de Usuario'),
-                          subtitle: Text(user.id),
-                        ),
+                        if (userProfile?.phoneNumber != null)
+                          const Divider(height: 1),
+                        if (userProfile?.phoneNumber != null)
+                          ListTile(
+                            leading: const Icon(Icons.phone_outlined),
+                            title: const Text('Teléfono'),
+                            subtitle: Text(userProfile!.phoneNumber!),
+                          ),
                       ],
                     ),
                   ),

@@ -5,6 +5,7 @@ class User {
   final String name;
   final String lastName;
   final List<String> roles;
+  final int? userProfileId;
 
   User({
     required this.id,
@@ -13,6 +14,7 @@ class User {
     required this.name,
     required this.lastName,
     required this.roles,
+    this.userProfileId,
   });
 
   bool hasRole(String role) {

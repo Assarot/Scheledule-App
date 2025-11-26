@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import '../models/user_profile_model.dart';
-import '../../utils/api_config.dart';
+import '../models/user_profile_create_request.dart';
 
 class UserProfileRemoteDataSource {
   final http.Client client;
@@ -16,7 +16,8 @@ class UserProfileRemoteDataSource {
     String email,
     String accessToken,
   ) async {
-    final url = '${ApiConfig.baseUrl}/api/users/email/$email';
+    // Llamada directa al microservicio ms-user (puerto 8082)
+    final url = 'http://192.168.0.45:8082/api/v1/user-profiles/email/$email';
     print('Fetching profile from: $url');
 
     final response = await client.get(
@@ -44,8 +45,9 @@ class UserProfileRemoteDataSource {
     int profileId,
     String accessToken,
   ) async {
+    // Llamada directa al microservicio ms-user (puerto 8082)
     final response = await client.get(
-      Uri.parse('${ApiConfig.baseUrl}/api/users/$profileId'),
+      Uri.parse('http://192.168.0.45:8082/api/v1/user-profiles/$profileId'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $accessToken',
@@ -67,8 +69,9 @@ class UserProfileRemoteDataSource {
     File imageFile,
     String accessToken,
   ) async {
+    // Llamada directa al microservicio ms-user (puerto 8082)
     final uri = Uri.parse(
-      '${ApiConfig.baseUrl}/api/users/$profileId/profile-picture',
+      'http://192.168.0.45:8082/api/v1/user-profiles/$profileId/profile-picture',
     );
 
     final request = http.MultipartRequest('PUT', uri)
@@ -89,6 +92,37 @@ class UserProfileRemoteDataSource {
     } else {
       throw Exception(
         'Error al actualizar foto de perfil: ${response.statusCode}',
+      );
+    }
+  }
+
+  /// Crear un nuevo perfil de usuario
+  Future<UserProfileModel> createUserProfile(
+    UserProfileCreateRequest request,
+    String accessToken,
+  ) async {
+    final url = 'http://192.168.0.45:8082/api/v1/user-profiles';
+
+    print('📝 Creating profile at: $url');
+    print('📝 Request body: ${jsonEncode(request.toJson())}');
+
+    final response = await client.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    print('📝 Create profile response status: ${response.statusCode}');
+    print('📝 Create profile response body: ${response.body}');
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return UserProfileModel.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception(
+        'Error al crear perfil: ${response.statusCode} - ${response.body}',
       );
     }
   }
