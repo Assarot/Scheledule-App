@@ -51,17 +51,29 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
 
-      // Paso 1: Obtener auth_user para conseguir el idUserProfile
-      final authUserDataSource = AuthUserRemoteDataSource();
-      final authUser = await authUserDataSource.getAuthUserById(
-        int.parse(user.id),
-        accessToken,
-      );
+      // Intentar usar userProfileId del JWT primero (evita llamada al endpoint restringido)
+      int? profileId = user.userProfileId;
 
-      print('✅ Got idUserProfile: ${authUser.idUserProfile}');
+      // Si no está en el JWT, intentar obtenerlo del auth_user
+      if (profileId == null) {
+        try {
+          final authUserDataSource = AuthUserRemoteDataSource();
+          final authUser = await authUserDataSource.getAuthUserById(
+            int.parse(user.id),
+            accessToken,
+          );
+          profileId = authUser.idUserProfile;
+          print('✅ Got idUserProfile from auth_user: $profileId');
+        } catch (e) {
+          print('⚠️  Could not fetch auth_user (permission issue): $e');
+          // Si falla por permisos, continuamos sin perfil
+        }
+      } else {
+        print('✅ Using userProfileId from JWT: $profileId');
+      }
 
-      // Si no tiene perfil, setState con isLoading = false para mostrar el formulario
-      if (authUser.idUserProfile == null) {
+      // Si no tiene perfil, mostrar formulario de creación
+      if (profileId == null) {
         setState(() {
           isLoading = false;
           userProfile = null;
@@ -69,10 +81,10 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
 
-      // Paso 2: Obtener el perfil completo usando el idUserProfile
+      // Obtener el perfil completo usando el idUserProfile
       final profileDataSource = UserProfileRemoteDataSource();
       final profile = await profileDataSource.getUserProfileById(
-        authUser.idUserProfile!,
+        profileId,
         accessToken,
       );
 
@@ -82,12 +94,11 @@ class _ProfilePageState extends State<ProfilePage> {
       });
     } catch (e) {
       print('Error loading user profile: $e');
-      setState(() => isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al cargar perfil: $e')));
-      }
+      setState(() {
+        isLoading = false;
+        userProfile = null; // Sin perfil, mostrar formulario de creación
+      });
+      // No mostrar SnackBar de error cuando no tiene perfil (es parte del flujo normal)
     }
   }
 
@@ -166,8 +177,12 @@ class _ProfilePageState extends State<ProfilePage> {
           : userProfile == null
           ? CreateProfilePage(
               authUserId: int.parse(user.id),
-              onProfileCreated: () {
-                _loadUserProfile();
+              onProfileCreated: (profile) {
+                // Actualizar directamente sin hacer GET al endpoint restringido
+                setState(() {
+                  userProfile = profile;
+                  isLoading = false;
+                });
               },
             )
           : SingleChildScrollView(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../utils/app_theme.dart';
+import '../../../data/models/user_profile_model.dart';
 import '../../../data/models/user_profile_create_request.dart';
 import '../../../data/datasources/user_profile_remote_datasource.dart';
 import '../../../data/datasources/auth_user_remote_datasource.dart';
@@ -8,7 +9,7 @@ import '../../../data/datasources/auth_local_datasource.dart';
 
 class CreateProfilePage extends StatefulWidget {
   final int authUserId;
-  final VoidCallback onProfileCreated;
+  final Function(UserProfileModel) onProfileCreated;
 
   const CreateProfilePage({
     super.key,
@@ -117,7 +118,7 @@ class _CreateProfilePageState extends State<CreateProfilePage> {
             backgroundColor: Colors.green,
           ),
         );
-        widget.onProfileCreated();
+        widget.onProfileCreated(profile);
       }
     } catch (e) {
       print('Error creating profile: $e');
