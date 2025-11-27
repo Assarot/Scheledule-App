@@ -50,11 +50,35 @@ class RoleBasedNavigation {
     allowedRoles: ['ADMIN', 'ASACAD'], // ADMIN y ASACAD pueden ver cursos
   );
 
+  static const teachers = NavigationItem(
+    label: 'Profesores',
+    icon: Icons.people_outline,
+    selectedIcon: Icons.people,
+    index: 4,
+    allowedRoles: ['ADMIN', 'ASACAD'], // ADMIN y ASACAD pueden gestionar profesores
+  );
+
+  static const dashboard = NavigationItem(
+    label: 'Dashboard',
+    icon: Icons.dashboard_outlined,
+    selectedIcon: Icons.dashboard,
+    index: 5,
+    allowedRoles: ['ADMIN'], // Solo ADMIN puede ver dashboard completo
+  );
+
+  static const reports = NavigationItem(
+    label: 'Reportes',
+    icon: Icons.assessment_outlined,
+    selectedIcon: Icons.assessment,
+    index: 6,
+    allowedRoles: ['ADMIN', 'ASACAD'], // ADMIN y ASACAD pueden generar reportes
+  );
+
   static const profile = NavigationItem(
     label: 'Perfil',
     icon: Icons.person_outline,
     selectedIcon: Icons.person,
-    index: 4,
+    index: 7,
     allowedRoles: ['ADMIN', 'COOROOMS', 'ASACAD'], // Todos pueden ver perfil
   );
 
@@ -64,6 +88,9 @@ class RoleBasedNavigation {
     environments,
     resources,
     courses,
+    teachers,
+    dashboard,
+    reports,
     profile,
   ];
 

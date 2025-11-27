@@ -28,10 +28,10 @@ class AuthRemoteDataSource {
             body: jsonEncode(request.toJson()),
           )
           .timeout(
-            const Duration(seconds: 10),
+            const Duration(seconds: 30),
             onTimeout: () {
               throw Exception(
-                'Timeout: El servidor no respondió en 10 segundos',
+                'Timeout: El servidor no respondió en 30 segundos',
               );
             },
           );

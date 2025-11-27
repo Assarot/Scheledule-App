@@ -57,6 +57,14 @@ dependencies:
   # Date formatting
   intl: ^0.19.0
 
+  # Charts for statistics
+  fl_chart: ^0.68.0
+
+  # PDF generation
+  pdf: ^3.11.1
+  printing: ^5.12.0
+  path_provider: ^2.1.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
