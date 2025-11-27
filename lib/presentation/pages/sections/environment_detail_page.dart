@@ -32,7 +32,6 @@ class _EnvironmentDetailPageState extends State<EnvironmentDetailPage> {
   final _cacheService = CacheService();
 
   bool _isDeleting = false;
-  bool _isLoadingMetadata = true;
 
   // Datos completos cargados
   BuildingModel? _building;
@@ -50,7 +49,6 @@ class _EnvironmentDetailPageState extends State<EnvironmentDetailPage> {
     try {
       final accessToken = await _authLocalDataSource.getAccessToken();
       if (accessToken == null) {
-        setState(() => _isLoadingMetadata = false);
         return;
       }
 
@@ -95,10 +93,9 @@ class _EnvironmentDetailPageState extends State<EnvironmentDetailPage> {
         }
       }
 
-      setState(() => _isLoadingMetadata = false);
+      if (mounted) setState(() {});
     } catch (e) {
       print('Error loading metadata: $e');
-      setState(() => _isLoadingMetadata = false);
     }
   }
 

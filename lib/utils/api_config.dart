@@ -7,7 +7,7 @@ class ApiConfig {
   // Para dispositivo físico en la misma red (usa la IP de tu máquina)
   // static const String baseUrl = 'http://192.168.0.45:8080';
 
-  static const String baseUrl = 'http://192.168.0.45:8080';
+  static const String baseUrl = 'http://172.17.26.38:8080';
 
   // Endpoints
   static const String authPath = '/microservice-auth/api/auth';
