@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../utils/app_theme.dart';
 import '../../../utils/auth_service.dart';
+import '../../../utils/connectivity_service.dart';
+import '../../../utils/cache_service.dart';
 import '../../../data/models/user_profile_model.dart';
 import '../../../data/datasources/user_profile_remote_datasource.dart';
 import '../../../data/datasources/auth_user_remote_datasource.dart';
@@ -23,6 +25,7 @@ class _ProfilePageState extends State<ProfilePage> {
   UserProfileModel? userProfile;
   bool isLoading = true;
   final ImagePicker _imagePicker = ImagePicker();
+  final CacheService _cacheService = CacheService();
 
   @override
   void initState() {
@@ -35,6 +38,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       final authService = context.read<AuthService>();
+      final connectivityService = context.read<ConnectivityService>();
       final user = authService.currentUser;
 
       if (user == null) {
@@ -51,11 +55,11 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
 
-      // Intentar usar userProfileId del JWT primero (evita llamada al endpoint restringido)
+      // Intentar usar userProfileId del JWT primero
       int? profileId = user.userProfileId;
 
-      // Si no está en el JWT, intentar obtenerlo del auth_user
-      if (profileId == null) {
+      // Si no está en el JWT, intentar obtenerlo del auth_user (solo si hay conexión)
+      if (profileId == null && connectivityService.isOnline) {
         try {
           final authUserDataSource = AuthUserRemoteDataSource();
           final authUser = await authUserDataSource.getAuthUserById(
@@ -65,14 +69,27 @@ class _ProfilePageState extends State<ProfilePage> {
           profileId = authUser.idUserProfile;
           print('✅ Got idUserProfile from auth_user: $profileId');
         } catch (e) {
-          print('⚠️  Could not fetch auth_user (permission issue): $e');
-          // Si falla por permisos, continuamos sin perfil
+          print('⚠️  Could not fetch auth_user: $e');
         }
-      } else {
+      } else if (profileId != null) {
         print('✅ Using userProfileId from JWT: $profileId');
       }
 
-      // Si no tiene perfil, mostrar formulario de creación
+      // Si no tiene profileId y está offline, intentar usar el último perfil cacheado
+      if (profileId == null && !connectivityService.isOnline) {
+        print('📱 Offline sin profileId - buscando último perfil en cache...');
+        final lastCachedProfile = await _cacheService.getLastCachedProfile();
+        if (lastCachedProfile != null) {
+          print('✅ Usando último perfil cacheado');
+          setState(() {
+            userProfile = lastCachedProfile;
+            isLoading = false;
+          });
+          return;
+        }
+      }
+
+      // Si no tiene perfil (online) o no hay cache (offline), mostrar formulario
       if (profileId == null) {
         setState(() {
           isLoading = false;
@@ -81,24 +98,61 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
 
-      // Obtener el perfil completo usando el idUserProfile
-      final profileDataSource = UserProfileRemoteDataSource();
-      final profile = await profileDataSource.getUserProfileById(
-        profileId,
-        accessToken,
-      );
+      // Intentar cargar desde cache primero
+      final cachedProfile = await _cacheService.getCachedUserProfile(profileId);
 
-      setState(() {
-        userProfile = profile;
-        isLoading = false;
-      });
+      if (cachedProfile != null && !connectivityService.isOnline) {
+        // Modo offline: usar cache
+        print('📱 Usando perfil en caché (modo offline)');
+        setState(() {
+          userProfile = cachedProfile;
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Modo online o cache no disponible: cargar desde servidor
+      if (connectivityService.isOnline) {
+        try {
+          final profileDataSource = UserProfileRemoteDataSource();
+          final profile = await profileDataSource.getUserProfileById(
+            profileId,
+            accessToken,
+          );
+
+          // Guardar en cache
+          await _cacheService.cacheUserProfile(profile);
+
+          setState(() {
+            userProfile = profile;
+            isLoading = false;
+          });
+        } catch (e) {
+          print('❌ Error cargando perfil del servidor: $e');
+          // Si falla y hay cache, usar cache
+          if (cachedProfile != null) {
+            print('📱 Usando perfil en caché (fallback)');
+            setState(() {
+              userProfile = cachedProfile;
+              isLoading = false;
+            });
+          } else {
+            throw e;
+          }
+        }
+      } else {
+        // Sin conexión y sin cache
+        setState(() {
+          isLoading = false;
+          userProfile = cachedProfile;
+        });
+      }
     } catch (e) {
       print('Error loading user profile: $e');
       setState(() {
         isLoading = false;
-        userProfile = null; // Sin perfil, mostrar formulario de creación
+        userProfile = null;
       });
-      // No mostrar SnackBar de error cuando no tiene perfil (es parte del flujo normal)
     }
   }
 

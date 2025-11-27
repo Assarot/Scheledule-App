@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/auth_service.dart';
+import '../../utils/connectivity_service.dart';
 import '../widgets/app_text_field.dart';
 import 'register_page.dart';
 import 'root_menu.dart';
@@ -149,11 +150,20 @@ class _LoginPageState extends State<LoginPage> {
     if (!_formKey.currentState!.validate()) return;
 
     final authService = context.read<AuthService>();
+    final connectivityService = context.read<ConnectivityService>();
     final username = emailController.text.trim();
     final password = passwordController.text;
 
     if (username.isEmpty || password.isEmpty) {
       _showError('Por favor completa todos los campos');
+      return;
+    }
+
+    // Verificar conexión antes de intentar login
+    if (!connectivityService.isOnline) {
+      _showError(
+        'Sin conexión a internet. El inicio de sesión requiere conexión.',
+      );
       return;
     }
 

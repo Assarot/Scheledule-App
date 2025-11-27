@@ -47,12 +47,22 @@ class _RecursosListPageState extends State<RecursosListPage> {
               _buildSortOptions(),
               const SizedBox(height: 16),
               if (summary.isNotEmpty) ...[
-                Text('Resumen de Recursos', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                Text(
+                  'Resumen de Recursos',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 _buildSummaryCards(summary),
                 const SizedBox(height: 16),
               ],
-              Text('Lista de Recursos', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              Text(
+                'Lista de Recursos',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: 8),
               Expanded(
                 child: ListView.separated(
@@ -68,10 +78,15 @@ class _RecursosListPageState extends State<RecursosListPage> {
                             color: AppColors.fieldFill,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Icon(_getResourceIcon(resource.type), color: AppColors.primary),
+                          child: Icon(
+                            _getResourceIcon(resource.type),
+                            color: AppColors.primary,
+                          ),
                         ),
                         title: Text(resource.type),
-                        subtitle: Text('Cantidad: ${resource.quantity} | Estado: ${resource.status}'),
+                        subtitle: Text(
+                          'Cantidad: ${resource.quantity} | Estado: ${resource.status}',
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -95,6 +110,7 @@ class _RecursosListPageState extends State<RecursosListPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'create_resource_fab',
         backgroundColor: AppColors.primary,
         onPressed: () => _addResource(),
         child: const Icon(Icons.add),
@@ -126,8 +142,21 @@ class _RecursosListPageState extends State<RecursosListPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(entry.key, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-              Text('${entry.value} disponibles', style: TextStyle(color: AppColors.primary, fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                entry.key,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                '${entry.value} disponibles',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         );
@@ -165,7 +194,8 @@ class _RecursosListPageState extends State<RecursosListPage> {
   void _addResource() async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => AddResourcePage(service: widget.service, environmentId: 'general'),
+        builder: (_) =>
+            AddResourcePage(service: widget.service, environmentId: 'general'),
       ),
     );
     if (result == true) setState(() {});
@@ -210,17 +240,17 @@ class _RecursosListPageState extends State<RecursosListPage> {
 
   List<Resource> _getFilteredAndSortedItems() {
     var items = widget.service.list(search: query);
-    
+
     // Filter by status
     if (selectedStatuses.isNotEmpty) {
       items = items.where((r) => selectedStatuses.contains(r.status)).toList();
     }
-    
+
     // Filter by type
     if (selectedTypes.isNotEmpty) {
       items = items.where((r) => selectedTypes.contains(r.type)).toList();
     }
-    
+
     // Sort
     items.sort((a, b) {
       int comparison = 0;
@@ -237,7 +267,7 @@ class _RecursosListPageState extends State<RecursosListPage> {
       }
       return ascending ? comparison : -comparison;
     });
-    
+
     return items;
   }
 
@@ -245,15 +275,28 @@ class _RecursosListPageState extends State<RecursosListPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Filtros', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.hint)),
+        Text(
+          'Filtros',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.hint),
+        ),
         const SizedBox(height: 8),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildFilterChip('Estado', selectedStatuses, ResourceService.statusOptions),
+              _buildFilterChip(
+                'Estado',
+                selectedStatuses,
+                ResourceService.statusOptions,
+              ),
               const SizedBox(width: 8),
-              _buildFilterChip('Tipo', selectedTypes, ResourceService.resourceTypes),
+              _buildFilterChip(
+                'Tipo',
+                selectedTypes,
+                ResourceService.resourceTypes,
+              ),
             ],
           ),
         ),
@@ -261,7 +304,11 @@ class _RecursosListPageState extends State<RecursosListPage> {
     );
   }
 
-  Widget _buildFilterChip(String label, Set<String> selected, List<String> options) {
+  Widget _buildFilterChip(
+    String label,
+    Set<String> selected,
+    List<String> options,
+  ) {
     return Container(
       width: 200,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -277,31 +324,30 @@ class _RecursosListPageState extends State<RecursosListPage> {
           isDense: true,
           isExpanded: true,
           items: [
-            DropdownMenuItem(
-              value: '',
-              child: Text('Todos los $label'),
-            ),
-            ...options.map((option) => DropdownMenuItem(
-              value: option,
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: selected.contains(option),
-                    onChanged: (checked) {
-                      setState(() {
-                        if (checked == true) {
-                          selected.add(option);
-                        } else {
-                          selected.remove(option);
-                        }
-                      });
-                    },
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  Expanded(child: Text(option)),
-                ],
+            DropdownMenuItem(value: '', child: Text('Todos los $label')),
+            ...options.map(
+              (option) => DropdownMenuItem(
+                value: option,
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: selected.contains(option),
+                      onChanged: (checked) {
+                        setState(() {
+                          if (checked == true) {
+                            selected.add(option);
+                          } else {
+                            selected.remove(option);
+                          }
+                        });
+                      },
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    Expanded(child: Text(option)),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
           onChanged: (value) {
             if (value == '') {
@@ -316,7 +362,12 @@ class _RecursosListPageState extends State<RecursosListPage> {
   Widget _buildSortOptions() {
     return Row(
       children: [
-        Text('Ordenar por:', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.hint)),
+        Text(
+          'Ordenar por:',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.hint),
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: DropdownButton<String>(

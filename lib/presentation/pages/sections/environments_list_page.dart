@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../data/repository_impl/environment_service.dart';
+import 'package:provider/provider.dart';
 import '../../../utils/app_theme.dart';
-import '../environment_form_page.dart';
-import '../environment_detail_page.dart';
+import '../../../utils/connectivity_service.dart';
+import '../../../data/models/academic_space_model.dart';
+import '../../../data/datasources/academic_space_remote_datasource.dart';
+import '../../../data/datasources/auth_local_datasource.dart';
 
 class EnvironmentsListPage extends StatefulWidget {
   const EnvironmentsListPage({super.key});
@@ -12,82 +14,144 @@ class EnvironmentsListPage extends StatefulWidget {
 }
 
 class _EnvironmentsListPageState extends State<EnvironmentsListPage> {
-  final EnvironmentService service = EnvironmentService();
-  String query = '';
-  Set<String> selectedTypes = {};
-  String sortBy = 'name'; // name, type, location
-  bool ascending = true;
+  final AcademicSpaceRemoteDataSource _dataSource =
+      AcademicSpaceRemoteDataSource();
+  final AuthLocalDataSource _authLocalDataSource = AuthLocalDataSource();
+
+  List<AcademicSpaceModel> _spaces = [];
+  bool _isLoading = true;
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSpaces();
+  }
+
+  Future<void> _loadSpaces() async {
+    final connectivityService = context.read<ConnectivityService>();
+
+    if (!connectivityService.isOnline) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sin conexión'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      final accessToken = await _authLocalDataSource.getAccessToken();
+      if (accessToken == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final spaces = await _dataSource.getAll(accessToken);
+      setState(() {
+        _spaces = spaces;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading spaces: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  List<AcademicSpaceModel> get _filteredSpaces {
+    if (_searchQuery.isEmpty) return _spaces;
+    return _spaces.where((space) {
+      final query = _searchQuery.toLowerCase();
+      return space.spaceName.toLowerCase().contains(query) ||
+          (space.location?.toLowerCase().contains(query) ?? false);
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final items = _getFilteredAndSortedItems();
     return Scaffold(
       appBar: AppBar(
         leading: const SizedBox.shrink(),
         title: const Text('Ambientes'),
-        centerTitle: true,
+        automaticallyImplyLeading: false,
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            children: [
-              TextField(
-                decoration: const InputDecoration(
-                  hintText: 'Buscar  ambientes',
-                  prefixIcon: Icon(Icons.search),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-                onChanged: (text) => setState(() => query = text),
-              ),
-              const SizedBox(height: 12),
-              _buildFilterChips(),
-              const SizedBox(height: 12),
-              _buildSortOptions(),
-              const SizedBox(height: 12),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final env = items[index];
-                    return ListTile(
-                      leading: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.fieldFill,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.apartment),
+                child: Column(
+                  children: [
+                    TextField(
+                      decoration: const InputDecoration(
+                        hintText: 'Buscar  ambientes',
+                        prefixIcon: Icon(Icons.search),
                       ),
-                      title: Text(env.name),
-                      subtitle: Text(env.location),
-                      onTap: () async {
-                        await Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => EnvironmentDetailPage(env: env, service: service),
-                        ));
-                        setState(() {});
-                      },
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () {
-                          service.delete(env.id);
-                          setState(() {});
+                      onChanged: (text) => setState(() => query = text),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildFilterChips(),
+                    const SizedBox(height: 12),
+                    _buildSortOptions(),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: items.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final env = items[index];
+                          return ListTile(
+                            leading: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.fieldFill,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.apartment),
+                            ),
+                            title: Text(env.name),
+                            subtitle: Text(env.location),
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => EnvironmentDetailPage(
+                                    env: env,
+                                    service: service,
+                                  ),
+                                ),
+                              );
+                              setState(() {});
+                            },
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () {
+                                service.delete(env.id);
+                                setState(() {});
+                              },
+                            ),
+                          );
                         },
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () async {
-          final created = await Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => EnvironmentFormPage(service: service),
-          ));
+          final created = await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => EnvironmentFormPage(service: service),
+            ),
+          );
           if (created == true) setState(() {});
         },
         child: const Icon(Icons.add),
@@ -97,12 +161,12 @@ class _EnvironmentsListPageState extends State<EnvironmentsListPage> {
 
   List<Environment> _getFilteredAndSortedItems() {
     var items = service.list(search: query);
-    
+
     // Filter by type
     if (selectedTypes.isNotEmpty) {
       items = items.where((e) => selectedTypes.contains(e.type)).toList();
     }
-    
+
     // Sort
     items.sort((a, b) {
       int comparison = 0;
@@ -119,31 +183,38 @@ class _EnvironmentsListPageState extends State<EnvironmentsListPage> {
       }
       return ascending ? comparison : -comparison;
     });
-    
+
     return items;
   }
 
   Widget _buildFilterChips() {
     final types = service.list().map((e) => e.type).toSet().toList();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Filtros', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.hint)),
+        Text(
+          'Filtros',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.hint),
+        ),
         const SizedBox(height: 8),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: [
-              _buildFilterChip('Tipo', selectedTypes, types),
-            ],
+            children: [_buildFilterChip('Tipo', selectedTypes, types)],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFilterChip(String label, Set<String> selected, List<String> options) {
+  Widget _buildFilterChip(
+    String label,
+    Set<String> selected,
+    List<String> options,
+  ) {
     return Container(
       width: 200,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -159,31 +230,30 @@ class _EnvironmentsListPageState extends State<EnvironmentsListPage> {
           isDense: true,
           isExpanded: true,
           items: [
-            DropdownMenuItem(
-              value: '',
-              child: Text('Todos los $label'),
-            ),
-            ...options.map((option) => DropdownMenuItem(
-              value: option,
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: selected.contains(option),
-                    onChanged: (checked) {
-                      setState(() {
-                        if (checked == true) {
-                          selected.add(option);
-                        } else {
-                          selected.remove(option);
-                        }
-                      });
-                    },
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  Expanded(child: Text(option)),
-                ],
+            DropdownMenuItem(value: '', child: Text('Todos los $label')),
+            ...options.map(
+              (option) => DropdownMenuItem(
+                value: option,
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: selected.contains(option),
+                      onChanged: (checked) {
+                        setState(() {
+                          if (checked == true) {
+                            selected.add(option);
+                          } else {
+                            selected.remove(option);
+                          }
+                        });
+                      },
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    Expanded(child: Text(option)),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
           onChanged: (value) {
             if (value == '') {
@@ -198,7 +268,12 @@ class _EnvironmentsListPageState extends State<EnvironmentsListPage> {
   Widget _buildSortOptions() {
     return Row(
       children: [
-        Text('Ordenar por:', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.hint)),
+        Text(
+          'Ordenar por:',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.hint),
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: DropdownButton<String>(
