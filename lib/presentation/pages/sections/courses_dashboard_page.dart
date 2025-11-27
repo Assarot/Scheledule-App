@@ -55,7 +55,6 @@ class _CoursesDashboardPageState extends State<CoursesDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: const SizedBox.shrink(),
         title: const Text('Dashboard de Cursos'),
         centerTitle: true,
         actions: [

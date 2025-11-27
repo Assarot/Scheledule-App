@@ -3,12 +3,18 @@ import 'package:http/http.dart' as http;
 import '../models/course_model.dart';
 import '../models/course_request.dart';
 import '../../utils/api_config.dart';
+import '../../utils/authenticated_http_client.dart';
+import 'auth_local_datasource.dart';
+import 'auth_remote_datasource.dart';
 
 class CourseRemoteDataSource {
   final http.Client client;
 
   CourseRemoteDataSource({http.Client? client})
-      : client = client ?? http.Client();
+      : client = client ?? AuthenticatedHttpClient(
+          localDataSource: AuthLocalDataSource(),
+          remoteDataSource: AuthRemoteDataSource(),
+        );
 
   /// Obtener todos los cursos
   Future<List<CourseModel>> getAllCourses() async {

@@ -24,7 +24,7 @@ class StatisticsService {
     // Estadísticas por escuela profesional
     final Map<String, int> coursesBySchool = {};
     for (final course in courses) {
-      final schoolName = course.group.cycle.professionalSchool.name;
+      final schoolName = course.group.cycle?.professionalSchool?.name ?? 'Sin escuela';
       coursesBySchool[schoolName] = (coursesBySchool[schoolName] ?? 0) + 1;
     }
 

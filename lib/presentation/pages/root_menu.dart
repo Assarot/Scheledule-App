@@ -9,9 +9,7 @@ import 'sections/environments_list_page.dart';
 import 'sections/recursos_list_page.dart';
 import 'sections/courses_list_page.dart';
 import 'sections/profile_page.dart';
-import 'sections/courses_dashboard_page.dart';
-import 'teacher_management_page.dart';
-import 'reports_page.dart';
+
 
 class RootMenu extends StatefulWidget {
   const RootMenu({super.key});
@@ -39,15 +37,12 @@ class _RootMenuState extends State<RootMenu> {
       });
     }
 
-    // Mapeo de páginas completo
+    // Mapeo de páginas simplificado
     final allPages = {
-      0: const HomeDashboardPage(),
+      0: const HomeDashboardPage(),     // Contendrá Dashboard y Reportes
       1: const EnvironmentsListPage(),
       2: RecursosListPage(service: resourceService),
-      3: const CoursesListPage(),
-      4: const TeacherManagementPage(),
-      5: const CoursesDashboardPage(),
-      6: const ReportsPage(),
+      3: const CoursesListPage(),       // Contendrá Profesores
       7: const ProfilePage(),
     };
 

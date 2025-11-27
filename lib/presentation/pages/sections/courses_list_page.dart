@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../utils/app_theme.dart';
+import '../../../utils/auth_service.dart';
 import '../../../data/repository_impl/course_service.dart';
 import '../../../domain/entity/course.dart';
 import '../course_form_page.dart';
 import '../course_detail_page.dart';
+import '../teacher_management_page.dart';
 
 class CoursesListPage extends StatefulWidget {
   const CoursesListPage({super.key});
@@ -25,6 +28,9 @@ class _CoursesListPageState extends State<CoursesListPage> {
   String _sortBy = 'name';
   bool _ascending = true;
   bool _isLoading = true;
+  
+  // Key para forzar reconstrucción del ListView
+  Key _listViewKey = UniqueKey();
 
   @override
   void initState() {
@@ -33,11 +39,16 @@ class _CoursesListPageState extends State<CoursesListPage> {
   }
 
   Future<void> _loadData() async {
+    print('🔄 Iniciando _loadData()...');
     setState(() => _isLoading = true);
     try {
       final courses = await _service.getAllCourses();
       final types = await _service.getCourseTypes();
       final plans = await _service.getPlans();
+      
+      print('📚 Cursos cargados: ${courses.length}');
+      print('🏷️ Tipos cargados: ${types.length}');
+      print('📋 Planes cargados: ${plans.length}');
       
       setState(() {
         _allCourses = courses;
@@ -45,8 +56,12 @@ class _CoursesListPageState extends State<CoursesListPage> {
         _plans = plans;
         _applyFilters();
         _isLoading = false;
+        _listViewKey = UniqueKey(); // Forzar reconstrucción del ListView
       });
+      
+      print('✅ _loadData() completado. Cursos filtrados: ${_filteredCourses.length}');
     } catch (e) {
+      print('❌ Error en _loadData(): $e');
       setState(() => _isLoading = false);
       _showError('Error al cargar datos: $e');
     }
@@ -61,15 +76,41 @@ class _CoursesListPageState extends State<CoursesListPage> {
       sortBy: _sortBy,
       ascending: _ascending,
     );
+    print('🔍 Filtros aplicados. Cursos filtrados: ${_filteredCourses.length}');
   }
 
   @override
   Widget build(BuildContext context) {
+    print('🏗️ Construyendo CoursesListPage. Loading: $_isLoading, Cursos: ${_filteredCourses.length}');
+    final authService = Provider.of<AuthService>(context);
+    final userRoles = authService.currentUser?.roles ?? [];
+    final canManageTeachers = userRoles.contains('ADMIN') || userRoles.contains('ASACAD');
+
     return Scaffold(
       appBar: AppBar(
         leading: const SizedBox.shrink(),
         title: const Text('Cursos'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Actualizar',
+            onPressed: () {
+              _loadData();
+            },
+          ),
+          if (canManageTeachers)
+            IconButton(
+              icon: const Icon(Icons.people),
+              tooltip: 'Gestionar Profesores',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TeacherManagementPage()),
+                );
+              },
+            ),
+        ],
       ),
       body: _isLoading ? _buildLoading() : _buildContent(),
       floatingActionButton: FloatingActionButton(
@@ -258,6 +299,7 @@ class _CoursesListPageState extends State<CoursesListPage> {
     }
 
     return ListView.separated(
+      key: _listViewKey,
       itemCount: _filteredCourses.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
@@ -347,7 +389,10 @@ class _CoursesListPageState extends State<CoursesListPage> {
       MaterialPageRoute(
         builder: (_) => CourseFormPage(service: _service),
       ),
-    ).then((_) => _loadData());
+    ).then((result) {
+      print('🆕 Regresando de crear curso, resultado: $result');
+      _loadData();
+    });
   }
 
   void _editCourse(Course course) {
@@ -356,7 +401,10 @@ class _CoursesListPageState extends State<CoursesListPage> {
       MaterialPageRoute(
         builder: (_) => CourseFormPage(service: _service, existingCourse: course),
       ),
-    ).then((_) => _loadData());
+    ).then((result) {
+      print('✏️ Regresando de editar curso, resultado: $result');
+      _loadData();
+    });
   }
 
   void _viewCourseDetail(Course course) {
@@ -393,10 +441,13 @@ class _CoursesListPageState extends State<CoursesListPage> {
 
   Future<void> _deleteCourse(Course course) async {
     try {
+      print('🗑️ Eliminando curso: ${course.name}');
       await _service.deleteCourse(course.idCourse);
       _showSuccess('Curso eliminado correctamente');
+      print('✅ Curso eliminado, recargando datos...');
       _loadData();
     } catch (e) {
+      print('❌ Error al eliminar curso: $e');
       _showError('Error al eliminar curso: $e');
     }
   }

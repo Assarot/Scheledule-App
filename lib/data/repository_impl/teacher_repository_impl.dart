@@ -3,6 +3,7 @@ import '../../domain/entity/course.dart';
 import '../../domain/repository/teacher_repository.dart';
 import '../datasources/course_management_remote_datasource.dart';
 import '../models/teacher_model.dart';
+import '../models/teacher_request.dart';
 
 class TeacherRepositoryImpl implements TeacherRepository {
   final CourseManagementRemoteDataSource remoteDataSource;
@@ -32,9 +33,16 @@ class TeacherRepositoryImpl implements TeacherRepository {
   @override
   Future<Teacher> createTeacher(Teacher teacher) async {
     try {
-      final teacherModel = await remoteDataSource.createTeacher(
-        TeacherModel.fromDomain(teacher),
+      final request = TeacherCreateRequest(
+        name: teacher.name,
+        paternalSurname: teacher.paternalSurname,
+        maternalSurname: teacher.maternalSurname,
+        email: teacher.email,
+        phone: teacher.phone,
+        address: teacher.address,
+        specialty: teacher.specialty,
       );
+      final teacherModel = await remoteDataSource.createTeacher(request);
       return teacherModel.toDomain();
     } catch (e) {
       throw Exception('Error al crear profesor: $e');
@@ -44,10 +52,16 @@ class TeacherRepositoryImpl implements TeacherRepository {
   @override
   Future<Teacher> updateTeacher(int id, Teacher teacher) async {
     try {
-      final teacherModel = await remoteDataSource.updateTeacher(
-        id,
-        TeacherModel.fromDomain(teacher),
+      final request = TeacherUpdateRequest(
+        name: teacher.name,
+        paternalSurname: teacher.paternalSurname,
+        maternalSurname: teacher.maternalSurname,
+        email: teacher.email,
+        phone: teacher.phone,
+        address: teacher.address,
+        specialty: teacher.specialty,
       );
+      final teacherModel = await remoteDataSource.updateTeacher(id, request);
       return teacherModel.toDomain();
     } catch (e) {
       throw Exception('Error al actualizar profesor: $e');

@@ -1,5 +1,16 @@
 import '../../domain/entity/course.dart';
 
+// Helper function para parsear IDs de forma segura
+int _parseId(dynamic value) {
+  if (value == null) return 0;
+  if (value is int) return value;
+  if (value is String) {
+    if (value.isEmpty || value == 'null') return 0;
+    return int.tryParse(value) ?? 0;
+  }
+  return 0;
+}
+
 class CourseModel {
   final int idCourse;
   final String name;
@@ -29,17 +40,17 @@ class CourseModel {
 
   factory CourseModel.fromJson(Map<String, dynamic> json) {
     return CourseModel(
-      idCourse: json['idCourse'],
-      name: json['name'],
-      code: json['code'],
-      description: json['description'],
-      duration: json['duration'],
-      theoreticalHours: json['theoreticalHours'],
-      practicalHours: json['practicalHours'],
-      totalHours: json['totalHours'],
-      courseType: CourseTypeModel.fromJson(json['courseType']),
-      plan: PlanModel.fromJson(json['plan']),
-      group: GroupModel.fromJson(json['group']),
+      idCourse: _parseId(json['idCourse']),
+      name: json['name']?.toString() ?? '',
+      code: json['code']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      duration: json['duration']?.toString() ?? 'PT0H',
+      theoreticalHours: json['theoreticalHours']?.toString() ?? 'PT0H',
+      practicalHours: json['practicalHours']?.toString() ?? 'PT0H',
+      totalHours: json['totalHours']?.toString() ?? 'PT0H',
+      courseType: CourseTypeModel.fromJson(json['courseType'] ?? {}),
+      plan: PlanModel.fromJson(json['plan'] ?? {}),
+      group: GroupModel.fromJson(json['group'] ?? {}),
     );
   }
 
@@ -92,15 +103,58 @@ class CourseModel {
   }
 
   static Duration _parseDuration(String duration) {
-    // Parse ISO 8601 duration format (PT300M, PT180H)
-    if (duration.startsWith('PT') && duration.endsWith('M')) {
-      final minutes = int.parse(duration.substring(2, duration.length - 1));
-      return Duration(minutes: minutes);
-    } else if (duration.startsWith('PT') && duration.endsWith('H')) {
-      final hours = int.parse(duration.substring(2, duration.length - 1));
-      return Duration(hours: hours);
+    try {
+      // Parse ISO 8601 duration format (PT300M, PT180H, PT3H3M, PT1M1S)
+      if (duration.isEmpty || duration == 'null') {
+        return Duration.zero;
+      }
+      
+      if (!duration.startsWith('PT')) {
+        // Try to parse as a direct number (minutes)
+        final directMinutes = int.tryParse(duration);
+        if (directMinutes != null) {
+          return Duration(minutes: directMinutes);
+        }
+        return Duration.zero;
+      }
+      
+      // Remove 'PT' prefix
+      String timeStr = duration.substring(2);
+      
+      int hours = 0;
+      int minutes = 0;
+      int seconds = 0;
+      
+      // Parse hours (PT3H or PT3H3M)
+      if (timeStr.contains('H')) {
+        final parts = timeStr.split('H');
+        hours = int.tryParse(parts[0]) ?? 0;
+        timeStr = parts.length > 1 ? parts[1] : '';
+      }
+      
+      // Parse minutes (PT3M or PT1M1S)
+      if (timeStr.contains('M')) {
+        final parts = timeStr.split('M');
+        minutes = int.tryParse(parts[0]) ?? 0;
+        timeStr = parts.length > 1 ? parts[1] : '';
+      }
+      
+      // Parse seconds (PT1S)
+      if (timeStr.contains('S')) {
+        final parts = timeStr.split('S');
+        seconds = int.tryParse(parts[0]) ?? 0;
+      }
+      
+      return Duration(
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+      );
+      
+    } catch (e) {
+      print('❌ Error parsing duration "$duration": $e');
+      return Duration.zero;
     }
-    return Duration.zero;
   }
 
   static String _formatDuration(Duration duration) {
@@ -123,8 +177,8 @@ class CourseTypeModel {
 
   factory CourseTypeModel.fromJson(Map<String, dynamic> json) {
     return CourseTypeModel(
-      idCourseType: json['idCourseType'],
-      name: json['name'],
+      idCourseType: _parseId(json['idCourseType']),
+      name: json['name']?.toString() ?? 'Tipo no definido',
     );
   }
 
@@ -161,8 +215,8 @@ class PlanModel {
 
   factory PlanModel.fromJson(Map<String, dynamic> json) {
     return PlanModel(
-      idPlan: json['idPlan'],
-      name: json['name'],
+      idPlan: _parseId(json['idPlan']),
+      name: json['name']?.toString() ?? 'Plan no definido',
     );
   }
 
@@ -192,21 +246,21 @@ class GroupModel {
   final int idGroup;
   final String groupNumber;
   final int capacity;
-  final CycleModel cycle;
+  final CycleModel? cycle;
 
   GroupModel({
     required this.idGroup,
     required this.groupNumber,
     required this.capacity,
-    required this.cycle,
+    this.cycle,
   });
 
   factory GroupModel.fromJson(Map<String, dynamic> json) {
     return GroupModel(
-      idGroup: json['idGroup'],
-      groupNumber: json['groupNumber'],
-      capacity: json['capacity'],
-      cycle: CycleModel.fromJson(json['cycle']),
+      idGroup: _parseId(json['idGroup']),
+      groupNumber: json['groupNumber']?.toString() ?? '',
+      capacity: _parseId(json['capacity']),
+      cycle: json['cycle'] != null ? CycleModel.fromJson(json['cycle']) : null,
     );
   }
 
@@ -215,7 +269,7 @@ class GroupModel {
       'idGroup': idGroup,
       'groupNumber': groupNumber,
       'capacity': capacity,
-      'cycle': cycle.toJson(),
+      'cycle': cycle?.toJson(),
     };
   }
 
@@ -224,7 +278,7 @@ class GroupModel {
       idGroup: idGroup,
       groupNumber: groupNumber,
       capacity: capacity,
-      cycle: cycle.toDomain(),
+      cycle: cycle?.toDomain(),
     );
   }
 
@@ -233,7 +287,7 @@ class GroupModel {
       idGroup: group.idGroup,
       groupNumber: group.groupNumber,
       capacity: group.capacity,
-      cycle: CycleModel.fromDomain(group.cycle),
+      cycle: group.cycle != null ? CycleModel.fromDomain(group.cycle!) : null,
     );
   }
 }
@@ -251,9 +305,11 @@ class CycleModel {
 
   factory CycleModel.fromJson(Map<String, dynamic> json) {
     return CycleModel(
-      idCycle: json['idCycle'],
-      name: json['name'],
-      professionalSchool: ProfessionalSchoolModel.fromJson(json['professionalSchool']),
+      idCycle: _parseId(json['idCycle']),
+      name: json['name']?.toString() ?? '',
+      professionalSchool: json['professionalSchool'] != null 
+        ? ProfessionalSchoolModel.fromJson(json['professionalSchool']) 
+        : ProfessionalSchoolModel(idProfessionalSchool: 0, name: 'No definida'),
     );
   }
 
@@ -293,8 +349,8 @@ class ProfessionalSchoolModel {
 
   factory ProfessionalSchoolModel.fromJson(Map<String, dynamic> json) {
     return ProfessionalSchoolModel(
-      idProfessionalSchool: json['idProfessionalSchool'],
-      name: json['name'],
+      idProfessionalSchool: _parseId(json['idProfessionalSchool']),
+      name: json['name']?.toString() ?? 'No definida',
     );
   }
 

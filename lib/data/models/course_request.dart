@@ -2,9 +2,9 @@ class CourseCreateRequest {
   final String name;
   final String code;
   final String description;
-  final int duration; // En minutos
-  final int theoreticalHours; // En minutos
-  final int practicalHours; // En minutos
+  final int duration; // En minutos (backend)
+  final int theoreticalHours; // En minutos (backend)
+  final int practicalHours; // En minutos (backend)
   final int idCourseType;
   final int idPlan;
   final int idGroup;
@@ -37,8 +37,8 @@ class CourseCreateRequest {
   }
 
   int _calculateTotalHours() {
-    // Convertir minutos a horas para el total
-    return ((theoreticalHours + practicalHours) / 60).ceil();
+    // Total en minutos (teoricas + prácticas)
+    return theoreticalHours + practicalHours;
   }
 }
 
@@ -46,9 +46,9 @@ class CourseUpdateRequest {
   final String name;
   final String code;
   final String description;
-  final int duration;
-  final int theoreticalHours;
-  final int practicalHours;
+  final int duration; // En minutos (backend)
+  final int theoreticalHours; // En minutos (backend) 
+  final int practicalHours; // En minutos (backend)
   final int idCourseType;
   final int idPlan;
   final int idGroup;
@@ -81,6 +81,7 @@ class CourseUpdateRequest {
   }
 
   int _calculateTotalHours() {
-    return ((theoreticalHours + practicalHours) / 60).ceil();
+    // Total en minutos (teoricas + prácticas)
+    return theoreticalHours + practicalHours;
   }
 }

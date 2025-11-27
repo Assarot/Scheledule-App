@@ -52,9 +52,9 @@ class _CourseFormPageState extends State<CourseFormPage> {
       _nameController.text = course.name;
       _codeController.text = course.code;
       _descriptionController.text = course.description;
-      _durationController.text = course.duration.inMinutes.toString();
-      _theoreticalHoursController.text = course.theoreticalHours.inMinutes.toString();
-      _practicalHoursController.text = course.practicalHours.inMinutes.toString();
+      _durationController.text = course.duration.inHours.toString();
+      _theoreticalHoursController.text = course.theoreticalHours.inHours.toString();
+      _practicalHoursController.text = course.practicalHours.inHours.toString();
     }
   }
 
@@ -193,7 +193,7 @@ class _CourseFormPageState extends State<CourseFormPage> {
                 Expanded(
                   child: AppTextField(
                     label: 'Duración Total',
-                    hint: 'Minutos',
+                    hint: 'Horas',
                     controller: _durationController,
                     leadingIcon: Icons.schedule,
                     keyboardType: TextInputType.number,
@@ -212,7 +212,7 @@ class _CourseFormPageState extends State<CourseFormPage> {
                 Expanded(
                   child: AppTextField(
                     label: 'Horas Teóricas',
-                    hint: 'Minutos',
+                    hint: 'Horas',
                     controller: _theoreticalHoursController,
                     leadingIcon: Icons.menu_book,
                     keyboardType: TextInputType.number,
@@ -222,7 +222,7 @@ class _CourseFormPageState extends State<CourseFormPage> {
                 Expanded(
                   child: AppTextField(
                     label: 'Horas Prácticas',
-                    hint: 'Minutos',
+                    hint: 'Horas',
                     controller: _practicalHoursController,
                     leadingIcon: Icons.build,
                     keyboardType: TextInputType.number,
@@ -231,7 +231,7 @@ class _CourseFormPageState extends State<CourseFormPage> {
               ],
             ),
             const SizedBox(height: 8),
-            Text('Nota: Ingrese todos los tiempos en minutos',
+            Text('Nota: Ingrese todos los tiempos en horas',
                  style: TextStyle(color: Colors.grey[600], fontSize: 12)),
           ],
         ),
@@ -366,19 +366,19 @@ class _CourseFormPageState extends State<CourseFormPage> {
     setState(() => _isLoading = true);
 
     try {
-      final theoreticalMinutes = int.parse(_theoreticalHoursController.text);
-      final practicalMinutes = int.parse(_practicalHoursController.text);
-      final totalMinutes = theoreticalMinutes + practicalMinutes;
+      final theoreticalHours = int.parse(_theoreticalHoursController.text);
+      final practicalHours = int.parse(_practicalHoursController.text);
+      final totalHours = theoreticalHours + practicalHours;
       
       final course = Course(
         idCourse: widget.existingCourse?.idCourse ?? 0,
         name: _nameController.text.trim(),
         code: _codeController.text.trim(),
         description: _descriptionController.text.trim(),
-        duration: Duration(minutes: int.parse(_durationController.text)),
-        theoreticalHours: Duration(minutes: theoreticalMinutes),
-        practicalHours: Duration(minutes: practicalMinutes),
-        totalHours: Duration(minutes: totalMinutes),
+        duration: Duration(hours: int.parse(_durationController.text)),
+        theoreticalHours: Duration(hours: theoreticalHours),
+        practicalHours: Duration(hours: practicalHours),
+        totalHours: Duration(hours: totalHours),
         courseType: _selectedCourseType!,
         plan: _selectedPlan!,
         group: _selectedGroup!,

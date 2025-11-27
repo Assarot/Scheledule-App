@@ -202,9 +202,11 @@ class CourseDetailPage extends StatelessWidget {
         const Divider(),
         _buildInfoRow('Plan', course.plan.name),
         const Divider(),
-        _buildInfoRow('Escuela Profesional', course.group.cycle.professionalSchool.name),
+        if (course.group.cycle?.professionalSchool != null)
+          _buildInfoRow('Escuela Profesional', course.group.cycle!.professionalSchool.name),
         const Divider(),
-        _buildInfoRow('Ciclo', course.group.cycle.name),
+        if (course.group.cycle != null)
+          _buildInfoRow('Ciclo', course.group.cycle!.name),
       ],
     );
   }
@@ -218,9 +220,11 @@ class CourseDetailPage extends StatelessWidget {
         const Divider(),
         _buildInfoRow('Capacidad', '${course.group.capacity} estudiantes'),
         const Divider(),
-        _buildInfoRow('Ciclo Académico', course.group.cycle.name),
+        if (course.group.cycle != null)
+          _buildInfoRow('Ciclo Académico', course.group.cycle!.name),
         const Divider(),
-        _buildInfoRow('Escuela', course.group.cycle.professionalSchool.name),
+        if (course.group.cycle?.professionalSchool != null)
+          _buildInfoRow('Escuela', course.group.cycle!.professionalSchool.name),
       ],
     );
   }

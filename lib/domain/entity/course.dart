@@ -89,13 +89,13 @@ class Group {
   final int idGroup;
   final String groupNumber;
   final int capacity;
-  final Cycle cycle;
+  final Cycle? cycle;
 
   const Group({
     required this.idGroup,
     required this.groupNumber,
     required this.capacity,
-    required this.cycle,
+    this.cycle,
   });
 
   @override

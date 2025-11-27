@@ -82,15 +82,12 @@ class RoleBasedNavigation {
     allowedRoles: ['ADMIN', 'COOROOMS', 'ASACAD'], // Todos pueden ver perfil
   );
 
-  // Lista completa de navegación en orden
+  // Lista completa de navegación en orden - MENÚ SIMPLIFICADO
   static const List<NavigationItem> allItems = [
-    home,
+    home,      // Contendrá Dashboard y Reportes
     environments,
     resources,
-    courses,
-    teachers,
-    dashboard,
-    reports,
+    courses,   // Contendrá Profesores
     profile,
   ];
 

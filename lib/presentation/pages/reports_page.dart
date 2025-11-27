@@ -203,49 +203,55 @@ class _ReportsPageState extends State<ReportsPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: (isEnabled ? report.color : Colors.grey).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   report.icon,
-                  size: 32,
+                  size: 28,
                   color: isEnabled ? report.color : Colors.grey,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Text(
                 report.title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: isEnabled ? null : Colors.grey,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
-              Text(
-                report.description,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: isEnabled ? Colors.grey[600] : Colors.grey,
+              const SizedBox(height: 4),
+              Expanded(
+                child: Text(
+                  report.description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: isEnabled ? Colors.grey[600] : Colors.grey,
+                    fontSize: 11,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: isEnabled ? () => _handleReportGeneration(report) : null,
                   icon: Icon(
                     isEnabled ? Icons.picture_as_pdf : Icons.lock,
-                    size: 16,
+                    size: 14,
                   ),
-                  label: Text(isEnabled ? 'Generar PDF' : 'Próximamente'),
+                  label: Text(
+                    isEnabled ? 'Generar PDF' : 'Próximamente',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isEnabled ? report.color : Colors.grey,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                   ),
                 ),
               ),

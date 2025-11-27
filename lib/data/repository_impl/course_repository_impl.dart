@@ -36,9 +36,9 @@ class CourseRepositoryImpl implements CourseRepository {
         name: course.name,
         code: course.code,
         description: course.description,
-        duration: course.duration.inMinutes,
-        theoreticalHours: course.theoreticalHours.inMinutes,
-        practicalHours: course.practicalHours.inMinutes,
+        duration: (course.duration.inHours * 60), // Convertir horas a minutos
+        theoreticalHours: (course.theoreticalHours.inHours * 60), // Convertir horas a minutos
+        practicalHours: (course.practicalHours.inHours * 60), // Convertir horas a minutos
         idCourseType: course.courseType.idCourseType,
         idPlan: course.plan.idPlan,
         idGroup: course.group.idGroup,
@@ -58,9 +58,9 @@ class CourseRepositoryImpl implements CourseRepository {
         name: course.name,
         code: course.code,
         description: course.description,
-        duration: course.duration.inMinutes,
-        theoreticalHours: course.theoreticalHours.inMinutes,
-        practicalHours: course.practicalHours.inMinutes,
+        duration: (course.duration.inHours * 60), // Convertir horas a minutos
+        theoreticalHours: (course.theoreticalHours.inHours * 60), // Convertir horas a minutos
+        practicalHours: (course.practicalHours.inHours * 60), // Convertir horas a minutos
         idCourseType: course.courseType.idCourseType,
         idPlan: course.plan.idPlan,
         idGroup: course.group.idGroup,

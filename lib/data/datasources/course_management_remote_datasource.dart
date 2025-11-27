@@ -2,13 +2,20 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/course_model.dart';
 import '../models/teacher_model.dart';
+import '../models/teacher_request.dart';
 import '../../utils/api_config.dart';
+import '../../utils/authenticated_http_client.dart';
+import 'auth_local_datasource.dart';
+import 'auth_remote_datasource.dart';
 
 class CourseManagementRemoteDataSource {
   final http.Client client;
 
   CourseManagementRemoteDataSource({http.Client? client})
-      : client = client ?? http.Client();
+      : client = client ?? AuthenticatedHttpClient(
+          localDataSource: AuthLocalDataSource(),
+          remoteDataSource: AuthRemoteDataSource(),
+        );
 
   /// Obtener todos los tipos de curso
   Future<List<CourseTypeModel>> getAllCourseTypes() async {
@@ -135,34 +142,40 @@ class CourseManagementRemoteDataSource {
   }
 
   /// Crear nuevo profesor
-  Future<TeacherModel> createTeacher(TeacherModel teacher) async {
+  Future<TeacherModel> createTeacher(TeacherCreateRequest request) async {
     final response = await client.post(
       Uri.parse('${ApiConfig.baseUrl}${ApiConfig.teachersPath}'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(teacher.toJson()),
+      body: jsonEncode(request.toJson()),
     );
 
     print('👨‍🏫 POST Teacher - Status: ${response.statusCode}');
+    print('👨‍🏫 Request body: ${jsonEncode(request.toJson())}');
+    print('👨‍🏫 Response body: ${response.body}');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       return TeacherModel.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Error al crear profesor: ${response.statusCode}');
+      throw Exception('Error al crear profesor: ${response.statusCode} - ${response.body}');
     }
   }
 
   /// Actualizar profesor existente
-  Future<TeacherModel> updateTeacher(int id, TeacherModel teacher) async {
+  Future<TeacherModel> updateTeacher(int id, TeacherUpdateRequest request) async {
     final response = await client.put(
       Uri.parse('${ApiConfig.baseUrl}${ApiConfig.teachersPath}/$id'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(teacher.toJson()),
+      body: jsonEncode(request.toJson()),
     );
+
+    print('👨‍🏫 PUT Teacher - Status: ${response.statusCode}');
+    print('👨‍🏫 Request body: ${jsonEncode(request.toJson())}');
+    print('👨‍🏫 Response body: ${response.body}');
 
     if (response.statusCode == 200) {
       return TeacherModel.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Error al actualizar profesor: ${response.statusCode}');
+      throw Exception('Error al actualizar profesor: ${response.statusCode} - ${response.body}');
     }
   }
 

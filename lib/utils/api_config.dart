@@ -5,7 +5,7 @@ class ApiConfig {
   // static const String baseUrl = 'http://10.0.2.2:8080';
 
   // Para dispositivo físico en la misma red (usa la IP de tu máquina)
-  static const String baseUrl = 'http://192.168.1.66:8080';
+  static const String baseUrl = 'http://172.17.25.31:8080';
 
   // Para iOS Simulator (usa localhost)
   // static const String baseUrl = 'http://localhost:8080';
@@ -14,14 +14,14 @@ class ApiConfig {
   // static const String baseUrl = 'https://tu-backend.com';
 
   // Endpoints
-  static const String authPath = '/api/auth';
+  static const String authPath = '/microservice-auth/api/auth';
   static const String loginPath = '$authPath/login';
   static const String loginRememberPath = '$authPath/login/remember';
   static const String registerPath = '$authPath/register';
   static const String refreshPath = '$authPath/refresh';
   
   // Course Management Endpoints (Puerto 8083 a través del Gateway 8080)
-  static const String courseBasePath = '/api/courses';
+  static const String courseBasePath = '/courses';
   static const String coursesPath = '$courseBasePath/course/v1/api';
   static const String courseTypesPath = '$courseBasePath/course-type/v1/api';
   static const String teachersPath = '$courseBasePath/teacher/v1/api';

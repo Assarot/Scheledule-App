@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_theme.dart';
 import '../../domain/entity/teacher.dart';
-import '../../data/repository_impl/course_service.dart';
+import '../../data/repository_impl/teacher_repository_impl.dart';
+import '../../data/datasources/course_management_remote_datasource.dart';
 
 class TeacherFormPage extends StatefulWidget {
   final Teacher? existingTeacher;
@@ -14,7 +15,9 @@ class TeacherFormPage extends StatefulWidget {
 
 class _TeacherFormPageState extends State<TeacherFormPage> {
   final _formKey = GlobalKey<FormState>();
-  final CourseService _service = CourseService();
+  final TeacherRepositoryImpl _teacherRepository = TeacherRepositoryImpl(
+    remoteDataSource: CourseManagementRemoteDataSource(),
+  );
   
   late TextEditingController _nameController;
   late TextEditingController _paternalSurnameController;
@@ -260,10 +263,10 @@ class _TeacherFormPageState extends State<TeacherFormPage> {
       );
 
       if (_isEditing) {
-        await _service.updateTeacher(teacher);
+        await _teacherRepository.updateTeacher(widget.existingTeacher!.idTeacher, teacher);
         _showSuccess('Profesor actualizado correctamente');
       } else {
-        await _service.createTeacher(teacher);
+        await _teacherRepository.createTeacher(teacher);
         _showSuccess('Profesor creado correctamente');
       }
 
@@ -311,7 +314,7 @@ class _TeacherFormPageState extends State<TeacherFormPage> {
     setState(() => _isLoading = true);
 
     try {
-      await _service.deleteTeacher(widget.existingTeacher!.idTeacher);
+      await _teacherRepository.deleteTeacher(widget.existingTeacher!.idTeacher);
       _showSuccess('Profesor eliminado correctamente');
       
       if (mounted) {

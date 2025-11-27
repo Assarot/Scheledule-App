@@ -3,6 +3,8 @@ import '../../utils/app_theme.dart';
 import '../../domain/entity/teacher.dart';
 import '../../domain/entity/course.dart';
 import '../../data/repository_impl/course_service.dart';
+import '../../data/repository_impl/teacher_repository_impl.dart';
+import '../../data/datasources/course_management_remote_datasource.dart';
 import '../../data/repository_impl/statistics_service.dart';
 import 'teacher_form_page.dart';
 
@@ -15,6 +17,9 @@ class TeacherManagementPage extends StatefulWidget {
 
 class _TeacherManagementPageState extends State<TeacherManagementPage> {
   final CourseService _service = CourseService();
+  final TeacherRepositoryImpl _teacherRepository = TeacherRepositoryImpl(
+    remoteDataSource: CourseManagementRemoteDataSource(),
+  );
   final StatisticsService _statisticsService = StatisticsService();
   
   List<Teacher> _teachers = [];
@@ -381,7 +386,7 @@ class _TeacherManagementPageState extends State<TeacherManagementPage> {
 
   Future<void> _deleteTeacher(Teacher teacher) async {
     try {
-      // TODO: Implementar eliminación en el servicio
+      await _teacherRepository.deleteTeacher(teacher.idTeacher);
       _showSuccess('Profesor eliminado correctamente');
       _loadData();
     } catch (e) {

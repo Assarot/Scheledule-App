@@ -6,9 +6,9 @@ import '../../domain/usescases/get_course_management_data_usecase.dart';
 import '../../domain/usescases/get_teachers_usecase.dart';
 import '../repository_impl/course_repository_impl.dart';
 import '../repository_impl/course_management_repository_impl.dart';
+import '../repository_impl/teacher_repository_impl.dart';
 import '../datasources/course_remote_datasource.dart';
 import '../datasources/course_management_remote_datasource.dart';
-import '../models/teacher_model.dart';
 
 class CourseService {
   late final GetCoursesUseCase _getCoursesUseCase;
@@ -32,8 +32,11 @@ class CourseService {
     final courseManagementRepository = CourseManagementRepositoryImpl(
       remoteDataSource: courseManagementRemoteDataSource,
     );
+    final teacherRepository = TeacherRepositoryImpl(
+      remoteDataSource: courseManagementRemoteDataSource,
+    );
 
-    // Inicializar casos de uso
+    // Inicializar use cases
     _getCoursesUseCase = GetCoursesUseCase(repository: courseRepository);
     _createCourseUseCase = CreateCourseUseCase(repository: courseRepository);
     _updateCourseUseCase = UpdateCourseUseCase(repository: courseRepository);
@@ -42,8 +45,8 @@ class CourseService {
     _getPlansUseCase = GetPlansUseCase(repository: courseManagementRepository);
     _getGroupsUseCase = GetGroupsUseCase(repository: courseManagementRepository);
     
-    // Repositorio temporal para profesores (implementar después)
-    _getTeachersUseCase = GetTeachersUseCase(repository: _createMockTeacherRepository());
+    // Usar el repositorio real de profesores
+    _getTeachersUseCase = GetTeachersUseCase(repository: teacherRepository);
   }
 
   // CRUD de Cursos
@@ -165,62 +168,6 @@ class CourseService {
     return stats;
   }
 
-  // Métodos CRUD para Profesores (usando CourseManagementRemoteDataSource)
-  Future<Teacher> createTeacher(Teacher teacher) async {
-    final courseManagementDataSource = CourseManagementRemoteDataSource();
-    final teacherModel = TeacherModel.fromDomain(teacher);
-    final createdModel = await courseManagementDataSource.createTeacher(teacherModel);
-    return createdModel.toDomain();
-  }
 
-  Future<Teacher> updateTeacher(Teacher teacher) async {
-    final courseManagementDataSource = CourseManagementRemoteDataSource();
-    final teacherModel = TeacherModel.fromDomain(teacher);
-    final updatedModel = await courseManagementDataSource.updateTeacher(teacher.idTeacher, teacherModel);
-    return updatedModel.toDomain();
-  }
 
-  Future<void> deleteTeacher(int teacherId) async {
-    final courseManagementDataSource = CourseManagementRemoteDataSource();
-    await courseManagementDataSource.deleteTeacher(teacherId);
-  }
-
-  // Mock temporal para profesores hasta implementar repository completo
-  _createMockTeacherRepository() {
-    return _MockTeacherRepository();
-  }
-}
-
-// Mock temporal
-class _MockTeacherRepository {
-  Future<List<Teacher>> getAllTeachers() async {
-    // Simular llamada a API de profesores
-    await Future.delayed(const Duration(milliseconds: 500));
-    return [
-      const Teacher(
-        idTeacher: 1, 
-        name: 'Abel', 
-        paternalSurname: 'Falcon', 
-        maternalSurname: 'Mendoza',
-        email: 'abel@email.com',
-        specialty: 'Matemáticas',
-      ),
-      const Teacher(
-        idTeacher: 2, 
-        name: 'María', 
-        paternalSurname: 'García', 
-        maternalSurname: 'López',
-        email: 'maria@email.com',
-        specialty: 'Física',
-      ),
-      const Teacher(
-        idTeacher: 3, 
-        name: 'Carlos', 
-        paternalSurname: 'López', 
-        maternalSurname: 'Pérez',
-        email: 'carlos@email.com',
-        specialty: 'Química',
-      ),
-    ];
-  }
 }
